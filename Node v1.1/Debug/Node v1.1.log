@@ -1,0 +1,13 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Common.props(150,5): warning MSB4211: Свойству "WindowsTargetPlatformVersion" в первый раз присваивается значение, но оно уже было использовано в "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\VC\VCTargets\Microsoft.Cpp.WindowsSDK.props (29,5)".
+cl : командная строка warning D9035: использование параметра "clr:pure" нежелательно, он будет удален в следующих выпусках
+  stdafx.cpp
+cl : командная строка warning D9035: использование параметра "clr:pure" нежелательно, он будет удален в следующих выпусках
+  AssemblyInfo.cpp
+AssemblyInfo.cpp(40): warning C4947: System::Security::Permissions::SecurityAction::RequestMinimum: помечен как устаревший
+  AssemblyInfo.cpp(40): note: Сообщение: "Assembly level declarative security is obsolete and is no longer enforced by the CLR by default. See http://go.microsoft.com/fwlink/?LinkID=155570 for more information."
+  Node v1.1.cpp
+  Создание кода...
+cl : командная строка warning D9035: использование параметра "clr:pure" нежелательно, он будет удален в следующих выпусках
+  .NETFramework,Version=v4.0.AssemblyAttributes.cpp
+  Node v1.1.vcxproj -> C:\Users\Анатлий\OneDrive\Жестокий и беспощадный кодинг\Node v1.1\Debug\Node v1.1.exe
+  Node v1.1.vcxproj -> C:\Users\Анатлий\OneDrive\Жестокий и беспощадный кодинг\Node v1.1\Debug\Node v1.1.pdb (Full PDB)
