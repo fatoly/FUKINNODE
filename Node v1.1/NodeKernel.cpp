@@ -370,40 +370,41 @@
 //		Поток для меш систем
 	DWORD NodeKernel::MeshThread(LPVOID t)
 	{
+		//При инициализации потока, мы определяем какие структуры он будет использовать
 		HANDLE  second[2];
-		second[0] = ;
-		second[1] = hMutexMeshProcess1;
+		int Index = Threads.Threads.size() + 1;								//Называем индекс потока, то бишь его порядковый номер на ус-ве
+		second[0] = Threads.hMeshIn.at(Index);
 		std::vector<int> VectorBuf;
 		for (;;)
 		{
-			WaitForSingleObject(hMutexMesh1, INFINITE);		//Резервируем Mesh1
-			if (Mesh1.size() - 1 > 0)						//Есть ли пакеты пришедшие из вне?
+			WaitForSingleObject(Threads.hMeshIn.at(Index), INFINITE);		//Резервируем Mesh1
+			if (Threads.MeshIn.at(Index).size - 1 > 0)						//Есть ли пакеты пришедшие из вне?
 			{
-				if (Convert::ToInt16(Mesh1.at(Mesh1.size() - 1).at(0)) == 228)
+				if (System::Convert::ToInt16(Threads.MeshIn.at(Index).at(Threads.MeshIn.at(Index).size - 1).at(0)) == 228)
 				{
-					MessageBox::Show(
+					/*System::MessageBox::Show(
 						Convert::ToString("Все пакеты по шине 2 отправленны. Итого: " + Convert::ToString(send2)),
 						Convert::ToString("Все гуд"),
 						MessageBoxButtons::OK,
-						MessageBoxIcon::Information);
+						MessageBoxIcon::Information);*/
+					Sleep(1);
 				}
 				else												//Если норм пакеты, то шо делать остается. Записываем в структуру для GenHandler
 				{
-					WaitForSingleObject(hMutexProcess, INFINITE);
-					Process.push_back(Mesh1[Mesh1.size() - 1]);
-					ReleaseMutex(hMutexProcess);
-					Mesh1.pop_back();
+					WaitForSingleObject(Global.hProcess, INFINITE);
+					Global.Process.push_back(Threads.MeshIn.at(Index).at(Threads.MeshIn.at(Index).size() - 1));
+					ReleaseMutex(Global.hProcess);
+					Threads.MeshIn.at(Index).pop_back();
 				}
 			}
-			ReleaseMutex(hMutexMesh1);
-			Sleep(IWANTSLEEP);
+			ReleaseMutex(Threads.hMeshIn.at(Index));
+			Sleep(Global.dream);
 			WaitForMultipleObjects(2, second, TRUE, INFINITE);	//резервируем Mesh1 и MeshProc1
-			if (MeshProcess1.size()>0)								//Есть ли пакеты в очереди на отправку
+			if (Threads.MeshOut.at(Index).size()>0)								//Есть ли пакеты в очереди на отправку
 			{
-				VectorBuf = MeshProcess1[MeshProcess1.size() - 1];
+				VectorBuf = Threads.MeshOut.at(Index)[Threads.MeshOut.at(Index).size() - 1];
 				VectorBuf.insert(VectorBuf.begin(), 228);
-				send1++;
-				Mesh1.insert(Mesh1.begin(), VectorBuf);
+				Threads.MeshIn.at(Index).insert(Mesh1.begin(), VectorBuf);
 				MeshProcess1.pop_back();
 			}
 			ReleaseMutex(second);
