@@ -3,19 +3,20 @@
 #include <vector>
 #include <windows.h>
 
+//Правила
 struct Rules
 {
-	std::vector<int[2]> Address;	//Адреса, с которых требуются данные для исполнения сценария (Узел и УСУ)		
-									//vector<> - массив, где каждый элемент соответствует адресу с которого ожидаются данные для исполнения сценария
-	std::vector<std::multimap<std::string, std::multimap <bool, double[2]>>> Values;
+	std::vector<int[2]> Address;											//Адреса, с которых требуются данные для исполнения сценария (Узел и УСУ)		
+																			//vector<> - массив, где каждый элемент соответствует адресу с которого ожидаются данные для исполнения сценария
+	std::vector<std::multimap<std::string, std::multimap <bool, double[2]>>> Values;//Структура для объявления значений для самого сценария. Индексы соответствуют с Adress
 };
 /*Событие*/
 struct EventSystem
 {
-	Rules Template;
-	Rules Standart;
-	//Что требуется сделать при истине сценария
-	std::vector<std::map<int[2], std::vector<int[2]>>> Action; //
+	std::string Name;														//Имя данного события. Нужно скорее для отладки, чем для полноценного функционирования
+	Rules Template;															//Шаблон для заполнения
+	Rules Standart;															//Эталон
+	std::vector<std::map<int[2], std::vector<int[2]>>> Action;				//Что требуется сделать при истине сценария
 };
 /*Самая главная структура для узла*/
 struct GlobalSystem

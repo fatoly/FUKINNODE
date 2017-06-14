@@ -1,13 +1,13 @@
 #pragma once
 #include "Structures.h"
-#include <iostream>
+
 #include <algorithm>
 
 class NodeKernel
 {
 	private:
 		GlobalSystem Global;													//Глобальная структура для главного потока
-		ThreadSystem Thread;													//Структура для потоков
+		ThreadSystem Threads;													//Структура для потоков
 		USUSystem Usu;															//Структура для подсистемы УСУ
 		/*Приватные функции в этом классе*/
 		void Calc(int startNode, int endNode);									//Рекурсия для просчета маршрутов
@@ -21,7 +21,7 @@ class NodeKernel
 		void CreateNewEvent(std::string NewEvent);								//Создать новое событие
 		bool CompareEvents(int key);											//Сравнить два события
 		void ExecuteEvent(int key);												//Выполнить событие
-		void Event(std::vector<int> Package);									//Обработчик пакетов на отправку в сеть
+		void GlobalEvent(std::vector<int> Package);								//Обработчик пакетов на отправку в сеть
 		void LocalEvent(std::vector<int> Package);								//Обработчик пакетов пришедших из подсистемы
 		int ShowWays(int from, int where);										//Возвращает кол-во путей от одного узла до другого, хз зачем это надо но пусть будет.
 		int CreateMeshThread();													//Возвращает по какому i найти HANDLE потока в массиве хэндлов Threads	
@@ -34,9 +34,7 @@ class NodeKernel
 		int SystemState(int Parametr);											//Возвращает состояние системы (сколько потоков открыто, сколько пакетов в буферах итд)
 		NodeKernel(char* Local, char* Global, int dream, int now);				//Конструктор класса. На вход имена двух текстовых файлов, интервал сна, номер узла
 		~NodeKernel();
-
-	static:
-	//Потоки
+		//Потоки
 		DWORD WINAPI GenHandler(LPVOID t);
 		DWORD WINAPI UsuThread(LPVOID t);
 		DWORD WINAPI MeshThread(LPVOID t);
