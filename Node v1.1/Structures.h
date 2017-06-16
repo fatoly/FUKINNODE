@@ -4,16 +4,32 @@
 #include <windows.h>
 
 //Правила
+struct DataPair
+{
+	std::string DataType;
+	double Value;
+};
+struct EventPair
+{
+	std::string DataType;
+	double DataRange[2];
+	bool Condition;
+};
+struct TemplateRules
+{
+	std::vector<int[2]> Address;
+	std::vector <DataPair> Data;
+};
 struct Rules
 {
 	std::vector<int[2]> Address;											//Адреса, с которых требуются данные для исполнения сценария (Узел и УСУ)		
-	std::vector<std::multimap<std::string, std::multimap <bool, double[2]>>> Values;//Структура для объявления значений для самого сценария. Индексы соответствуют с Adress
+	std::vector<EventPair> Event;											//Структура для объявления значений для самого сценария. Индексы соответствуют с Adress
 };
 /*Событие*/
 struct EventSystem
 {
 	std::string Name;														//Имя данного события. Нужно скорее для отладки, чем для полноценного функционирования
-	Rules Template;															//Шаблон для заполнения
+	TemplateRules Template;													//Шаблон для заполнения
 	Rules Standart;															//Эталон
 	std::vector<std::map<int[2], std::vector<int[2]>>> Action;				//Что требуется сделать при истине сценария
 };

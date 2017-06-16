@@ -301,6 +301,7 @@
 //		Обрабатываем пакет по событиям
 	void NodeKernel::Events(std::vector<int> OnePac)
 	{
+
 		//На вход получаем пакет, который обрабатываем (Из данных с датчиков, в управляющее воздействие)
 		//Обработанный пихаем обратно в Process
 		Global.Process.push_back(Global.PacEvent);
@@ -309,14 +310,33 @@
 	void NodeKernel::CreateNewEvent(std::string NewEvent)
 	{
 	}
-//		Функция сравнения ивентов с эталонным	
+//	+	Функция сравнения ивентов с эталонным	
 	bool NodeKernel::CompareEvents(int key)
 	{
-		return false;
+		if (Global.Events[key].Standart.Address == Global.Events[key].Template.Address)											//сравниваем массив адресов шаблона и эталона. Если равны то проверяем вхождение/выхождение из диапазона
+			for (int i = 0; i < Global.Events.at(key).Standart.Address.size(); i++)
+				if (Global.Events.at(key).Template.Data.at(i).DataType == Global.Events.at(key).Standart.Event.at(i).DataType)	//проверка типа данных
+					if (Global.Events.at(key).Standart.Event.at(i).Condition == true)											//Если вхождение в диапазон
+						if (Global.Events.at(key).Template.Data.at(i).Value >= Global.Events.at(key).Standart.Event.at(i).DataRange[0] && Global.Events.at(key).Template.Data.at(i).Value <= Global.Events.at(key).Standart.Event.at(i).DataRange[1])
+							continue;
+						else
+							return false;
+					else 
+						if (Global.Events.at(key).Template.Data.at(i).Value <= Global.Events.at(key).Standart.Event.at(i).DataRange[0] || Global.Events.at(key).Template.Data.at(i).Value >= Global.Events.at(key).Standart.Event.at(i).DataRange[1])
+							continue;
+						else 
+							return false;
+				else
+					return false;
+		else
+			return false;
+		return true;
 	}
 //		Функция выполняющая соответствующий ивент	
 	void NodeKernel::ExecuteEvent(int key)
 	{
+		if (CompareEvents(key) == true)
+			continue;
 	}
 //		Агрегирует данные пришетшие с системы узлов	
 	void NodeKernel::GlobalEvent(std::vector<int> Package)
