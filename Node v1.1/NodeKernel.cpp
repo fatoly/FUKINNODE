@@ -178,7 +178,7 @@
 //	+	Запушить пакеты из текстового файла для эмуляции работы сети узлов
 	void NodeKernel::PushPacMesh(char * filename)
 	{
-		PauseThreads(2);								//Для того чтобы небыло вообще никаких проблем, ставим все потоки, кроме главного, на паузу.
+		//PauseThreads(2);								//Для того чтобы небыло вообще никаких проблем, ставим все потоки, кроме главного, на паузу.
 		FILE*	file = fopen(filename, "rt");
 		char buf[256] = { 0 };
 		std::string str;
@@ -249,7 +249,7 @@
 			return -1;
 		return Global.MapGlobal.at(Global.now).size();
 	}
-//		Агрегирует данные пришедгие с подсистемы
+//		Агрегирует данные пришедшие с подсистемы
 	void NodeKernel::LocalEvent(std::vector<int> Package)
 	{
 		//срет ими в OnePak
@@ -301,28 +301,52 @@
 //		Обрабатываем пакет по событиям
 	void NodeKernel::Events(std::vector<int> OnePac)
 	{
-
-		//На вход получаем пакет, который обрабатываем (Из данных с датчиков, в управляющее воздействие)
+		//На вход получаем пакет, который обрабатываем (Из данных с датчиков, в управляющее воздействие либо отправляем пакет с данными на другой узел)
 		//Обработанный пихаем обратно в Process
+		switch (OnePac.at(4))
+		{
+		case 1:
+		{
+			//Получили из Mesh, то бишь либо значения дачиков, либо управляющее воздействие
+			if (OnePac.at(5) == 0)
+			{
+				//Это управляющее воздействие. Надо просто обработать в вид который принимает GenHandler. 
+			}
+			else
+			{
+				//Это данные. Их надо внести в соответствующий Template события.
+				
+			}
+			break; 
+		};
+		case 2:
+		{
+			//Получили от УСУшек, соотв переправить данные на нужный узел
+			break; 
+		};
+		default:
+			break;
+		}
+
 		Global.Process.push_back(Global.PacEvent);
 	}
-//		Функция для создания нового ивента	
+//		Функция для создания нового ивента то есть запушить из файла
 	void NodeKernel::CreateNewEvent(std::string NewEvent)
 	{
 	}
 //	+	Функция сравнения ивентов с эталонным	
-	bool NodeKernel::CompareEvents(int key)
+	bool NodeKernel::CompareEvents(EventSystem Buffer)
 	{
-		if (Global.Events[key].Standart.Address == Global.Events[key].Template.Address)											//сравниваем массив адресов шаблона и эталона. Если равны то проверяем вхождение/выхождение из диапазона
-			for (int i = 0; i < Global.Events.at(key).Standart.Address.size(); i++)
-				if (Global.Events.at(key).Template.Data.at(i).DataType == Global.Events.at(key).Standart.Event.at(i).DataType)	//проверка типа данных
-					if (Global.Events.at(key).Standart.Event.at(i).Condition == true)											//Если вхождение в диапазон
-						if (Global.Events.at(key).Template.Data.at(i).Value >= Global.Events.at(key).Standart.Event.at(i).DataRange[0] && Global.Events.at(key).Template.Data.at(i).Value <= Global.Events.at(key).Standart.Event.at(i).DataRange[1])
+		if (Buffer.Standart.Address == Buffer.Template.Address)											//сравниваем массив адресов шаблона и эталона. Если равны то проверяем вхождение/выхождение из диапазона
+			for (int i = 0; i < Buffer.Standart.Address.size(); i++)
+				if (Buffer.Template.Data.at(i).DataType == Buffer.Standart.Event.at(i).DataType)	//проверка типа данных
+					if (Buffer.Standart.Event.at(i).Condition == true)											//Если вхождение в диапазон
+						if (Buffer.Template.Data.at(i).Value >= Buffer.Standart.Event.at(i).DataRange[0] && Buffer.Template.Data.at(i).Value <= Buffer.Standart.Event.at(i).DataRange[1])
 							continue;
 						else
 							return false;
 					else 
-						if (Global.Events.at(key).Template.Data.at(i).Value <= Global.Events.at(key).Standart.Event.at(i).DataRange[0] || Global.Events.at(key).Template.Data.at(i).Value >= Global.Events.at(key).Standart.Event.at(i).DataRange[1])
+						if (Buffer.Template.Data.at(i).Value <= Buffer.Standart.Event.at(i).DataRange[0] || Buffer.Template.Data.at(i).Value >= Buffer.Standart.Event.at(i).DataRange[1])
 							continue;
 						else 
 							return false;
@@ -335,7 +359,7 @@
 //		Функция выполняющая соответствующий ивент	
 	void NodeKernel::ExecuteEvent(int key)
 	{
-		if (CompareEvents(key) == true)
+		if (CompareEvents(Global.Events.at(key)) == true)
 			continue;
 	}
 //		Агрегирует данные пришетшие с системы узлов	
@@ -355,7 +379,6 @@
 	NodeKernel::~NodeKernel()
 	{
 	}
-
 //		Главный обработчик
 	DWORD NodeKernel::GenHandler(LPVOID t)
 	{
