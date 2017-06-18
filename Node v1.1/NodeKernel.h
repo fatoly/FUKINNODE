@@ -18,7 +18,7 @@ class NodeKernel
 		int		ShowSheet(int from, int where);									//Возвращает на какую шину данных сейчас надо отправить пакет
 		void	Events(std::vector<int> OnePac);								//обрабатывает пакет в соответствии с событиями
 		void	CreateNewEvent(std::string NewEvent);							//Создать новое событие
-		bool	CompareEvents(int key);											//Сравнить два события
+		bool	CompareEvents(EventSystem Buffer);											//Сравнить два события
 		void	ExecuteEvent(int key);											//Выполнить событие
 		void	GlobalEvent(std::vector<int> Package);							//Обработчик пакетов на отправку в сеть
 		void	LocalEvent(std::vector<int> Package);							//Обработчик пакетов пришедших из подсистемы
