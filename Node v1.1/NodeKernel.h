@@ -35,8 +35,22 @@ class NodeKernel
 		NodeKernel(char* Local, char* Global, int dream, int now);				//Конструктор класса. На вход имена двух текстовых файлов, интервал сна, номер узла
 		~NodeKernel();
 		//Потоки
-		DWORD WINAPI GenHandler(LPVOID t);
-		DWORD WINAPI UsuThread(LPVOID t);
-		DWORD WINAPI MeshThread(LPVOID t);
+private:
+		static DWORD WINAPI GenHandler(LPVOID t);
+
+		//RWorker* _this = (RWorker*)ptr;
+		//if (!_this) return 1; //забыли нам дать объект, не будем работать
+		//for (;;)
+		//{
+		//	//сделаем важную работу
+		//	_this->setData(_this->getData() + 1);
+		//	//поспим, глядя на флаг конца работы
+		//	if (WaitForSingleObject(_this->hStopEvt, 1000) != WAIT_TIMEOUT)
+		//		break;
+		//}
+		//return 0;
+
+		static DWORD WINAPI UsuThread(LPVOID t);
+		static DWORD WINAPI MeshThread(LPVOID t);
 };
 
