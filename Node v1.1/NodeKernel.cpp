@@ -382,6 +382,18 @@
 //		Главный обработчик
 	DWORD NodeKernel::GenHandler(LPVOID t)
 	{
+		//RWorker* _this = (RWorker*)ptr;
+		//if (!_this) return 1; //забыли нам дать объект, не будем работать
+		//for (;;)
+		//{
+		//	//сделаем важную работу
+		//	_this->setData(_this->getData() + 1);
+		//	//поспим, глядя на флаг конца работы
+		//	if (WaitForSingleObject(_this->hStopEvt, 1000) != WAIT_TIMEOUT)
+		//		break;
+		//}
+		//return 0;
+
 		for (;;)
 		{
 			Sleep(Global.dream);
