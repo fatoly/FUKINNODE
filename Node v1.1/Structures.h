@@ -6,13 +6,13 @@
 //Правила
 struct DataPair
 {
-	std::string DataType;
-	double Value;
+	int DataType;
+	int Value;
 };
 struct EventPair
 {
-	std::string DataType;
-	double DataRange[2];
+	int DataType;
+	int DataRange[2];
 	bool Condition;
 };
 struct TemplateRules
@@ -31,7 +31,11 @@ struct EventSystem
 	std::string Name;														//Имя данного события. Нужно скорее для отладки, чем для полноценного функционирования
 	TemplateRules Template;													//Шаблон для заполнения
 	Rules Standart;															//Эталон
-	std::vector<std::map<int[2], std::vector<int[2]>>> Action;				//Что требуется сделать при истине сценария
+	std::vector																//Действия
+		<std::map															//Дествие
+		<int[2]																//Адрес
+		,std::vector														//Пакет описываемого действия
+		<int>>> Action;														//Что требуется сделать при истине сценария
 };
 /*Самая главная структура для узла*/
 struct GlobalSystem
@@ -41,7 +45,12 @@ struct GlobalSystem
 	std::string name;														//Имя узла
 	std::vector<std::vector<int>> mapResult;								//Структура для маршрутов
 	std::vector<int> visitedNodes;											//Структура для функции Calc
-	std::map<int, std::map<int, int>> MapLocal;								//Структура для мапы БСУ
+	std::map																//Узлы
+		<int																//Узел
+		,std::map															//УСУшки
+		<int																//Номер УСУ
+		, int																//Тип УСУ
+		>> MapLocal;														//Структура для мапы БСУ
 	std::map<int, std::map<int, std::vector<int>>> MapGlobal;				//Cтруктура для мапы узлов
 	std::vector<std::vector<int>> Process;									//Структура для главного обработчика GenHandler
 	HANDLE hProcess;														//Мютекс для главной структуры GenHandler
@@ -54,10 +63,17 @@ struct GlobalSystem
 struct ThreadSystem
 {
 	std::vector<HANDLE> Threads;											//Массив для хранения хэндлов потоков шин данных.
-	std::vector<std::vector<std::vector<int>>> MeshOut;						//Массив структур для дальнейшей отправки пакетов по шинам.
+	std::vector																//Шина
+		<std::vector														//Пакеты
+		<std::vector														//Пакет
+		<int>>> MeshOut;													//Массив структур для дальнейшей отправки пакетов по шинам.
 	std::vector<HANDLE> hMeshOut;											//Массив мьютексов для доступа в структуру MeshOut
-	std::vector<std::vector<std::vector<int>>> MeshIn;						//Структура для эмуляции входных пакетов на шины данных
+	std::vector																//Шина
+		<std::vector														//Пакеты
+		<std::vector														//Пакет
+		<int>>> MeshIn;														//Структура для эмуляции входных пакетов на шины данных
 	std::vector<HANDLE> hMeshIn;											//Массив мьютексов для доступа в структуру MeshIn
+	std::vector<int> PushMeshPac;											//Сколько пришло пакетов (сколько считать из структуры MeshIn)
 };
 /*Это все что связанно с сетью УСУ данного узла*/
 struct UsuSystem

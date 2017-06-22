@@ -18,8 +18,8 @@ class NodeKernel
 		int		ShowSheet(int from, int where);									//Возвращает на какую шину данных сейчас надо отправить пакет
 		void	Events(std::vector<int> OnePac);								//обрабатывает пакет в соответствии с событиями
 		void	CreateNewEvent(std::string NewEvent);							//Создать новое событие
-		bool	CompareEvents(EventSystem Buffer);											//Сравнить два события
-		void	ExecuteEvent(int key);											//Выполнить событие
+		bool	CompareEvents(EventSystem Buffer);								//Сравнить два события
+		void	ExecuteEvent(EventSystem Buffer);								//Выполнить событие
 		void	GlobalEvent(std::vector<int> Package);							//Обработчик пакетов на отправку в сеть
 		void	LocalEvent(std::vector<int> Package);							//Обработчик пакетов пришедших из подсистемы
 		int		ShowWays(int from, int where);									//Возвращает кол-во путей от одного узла до другого, хз зачем это надо но пусть будет.
@@ -31,25 +31,13 @@ class NodeKernel
 		bool	PauseThreads(int mode);											//1 - все, 2 - только шины. Возвращает 1 если все ровно, 0 если уже на паузе
 		bool	ContinueThreads(int mode);										//1 - все, 2 - только шины. Возвращает 1 если все ровно, 0 если уже работают
 		int		SystemState(int Parametr);										//Возвращает состояние системы (сколько потоков открыто, сколько пакетов в буферах итд)
-		
+		void	PushPac(int Mesh, int num);										//Пушануть пакеты, а именно что они пришли (привязка к кнопке на форме) подаем порядковый номер шины и сколько "пришло" пакетов
+
 		NodeKernel(char* Local, char* Global, int dream, int now);				//Конструктор класса. На вход имена двух текстовых файлов, интервал сна, номер узла
 		~NodeKernel();
 		//Потоки
-private:
+	private:
 		static DWORD WINAPI GenHandler(LPVOID t);
-
-		//RWorker* _this = (RWorker*)ptr;
-		//if (!_this) return 1; //забыли нам дать объект, не будем работать
-		//for (;;)
-		//{
-		//	//сделаем важную работу
-		//	_this->setData(_this->getData() + 1);
-		//	//поспим, глядя на флаг конца работы
-		//	if (WaitForSingleObject(_this->hStopEvt, 1000) != WAIT_TIMEOUT)
-		//		break;
-		//}
-		//return 0;
-
 		static DWORD WINAPI UsuThread(LPVOID t);
 		static DWORD WINAPI MeshThread(LPVOID t);
 };

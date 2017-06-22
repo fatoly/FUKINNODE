@@ -357,14 +357,52 @@
 		return true;
 	}
 //		Функция выполняющая соответствующий ивент	
-	void NodeKernel::ExecuteEvent(int key)
+	void NodeKernel::ExecuteEvent(EventSystem Buffer)
 	{
-		if (CompareEvents(Global.Events.at(key)) == true)
-			continue;
 	}
 //		Агрегирует данные пришетшие с системы узлов	
 	void NodeKernel::GlobalEvent(std::vector<int> Package)
 	{
+		//получили пакет, надо обработать и запихать обратно в Process, благо мьютекс мы уже заняли.
+		//Получили из Mesh, то бишь либо значения дачиков, либо управляющее воздействие
+		if (Package.at(5) == 0)
+		{
+			//Это управляющее воздействие. Надо просто обработать в вид который принимает GenHandler. 
+			Package.at(0) = Global.now;
+			Package.at(1) = Global.now;
+			Package.at(2) = Global.now;
+			Package.at(4) = 3;
+			Global.Process.insert(Global.Process.begin(), Package);
+		}
+		else
+		{
+			//Это данные. Их надо внести в соответствующий Template события.
+			for (int i = 0; i < Global.Events.size(); i++)
+			{
+				//Ищем нужное событие по адресу узла
+				for (int j = 0; j < Global.Events.at(i).Standart.Address.size(); j++)
+				{
+					//Шагаем по адресам в ивенте
+					if (Global.Events.at(i).Standart.Address.at(j)[0] == Package.at(2))
+					{
+						//Если нужный узел нашли, то проверяем УСУ
+						if (Global.Events.at(i).Standart.Address.at(j)[1] == Package.at(3))
+						{
+							//нашли нужный шаблон, значит надо заполнить темплейт. Ясное дело если у нас совпадает тип данных
+							if (Global.Events.at(i).Template.Data.at(j).DataType == Package.at(5))
+							{
+								Global.Events.at(i).Template.Data.at(j).Value = Package.at(6);
+								//После того как заполнили шаблон, сравниваем с эталоном. Если да, то выполняем событие
+								if (CompareEvents(Global.Events.at(i)))
+								{
+									ExecuteEvent(Global.Events.at(i));
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 //	+	Конструктор класса
 	NodeKernel::NodeKernel(char* Localtxt, char* Globaltxt, int dream, int now)			//Конструктор класса
@@ -380,90 +418,129 @@
 	{
 	}
 //		Главный обработчик
-	DWORD NodeKernel::GenHandler(LPVOID t)
+	DWORD WINAPI NodeKernel::GenHandler(LPVOID t)
 	{
-		//RWorker* _this = (RWorker*)ptr;
-		//if (!_this) return 1; //забыли нам дать объект, не будем работать
-		//for (;;)
-		//{
-		//	//сделаем важную работу
-		//	_this->setData(_this->getData() + 1);
-		//	//поспим, глядя на флаг конца работы
-		//	if (WaitForSingleObject(_this->hStopEvt, 1000) != WAIT_TIMEOUT)
-		//		break;
-		//}
-		//return 0;
-
+		NodeKernel* _this = (NodeKernel*)t;
+		if (!_this) 
+			return;
+		
 		for (;;)
 		{
-			Sleep(Global.dream);
-			WaitForSingleObject(Global.hProcess, INFINITE);
-			if (Global.Process.size() > 0)
+			Sleep(_this->Global.dream); //чтобы работало помедленнее
+			WaitForSingleObject(_this->Global.hProcess, INFINITE);	//подождать когда у нас буфер Proecss освободится а потом занять его.
+			if (_this->Global.Process.size() > 0)					//Если в нем что-то есть, то ништяк, работаем пасаны.
 			{
-				if (Global.Process.at(Global.Process.size() - 1).at(3) == Global.now || Global.Process.at(Global.Process.size() - 1).at(4) == Global.now)//проверяем, назначался ли нам этот пакет
-					Global.Process.pop_back();
+				if (_this->Global.Process.at(_this->Global.Process.size()).at(0) == _this->Global.now || _this->Global.Process.at(_this->Global.Process.size() - 1).at(1) == _this->Global.now)
+				{
+					if (_this->Global.Process.at(_this->Global.Process.size()).at(0) == _this->Global.now) //Если мы это конечный узел
+					{
+						switch (_this->Global.Process.at(_this->Global.Process.size()).at(4))
+						{
+							case 1:
+							{
+								//Пришло из меша
+								_this->GlobalEvent(_this->Global.Process.at(_this->Global.Process.size));
+								_this->Global.Process.pop_back();
+								break;
+							}
+							case 2:
+							{
+								_this->LocalEvent(_this->Global.Process.at(_this->Global.Process.size));
+								//пришло с УСУ
+								break;
+							}
+							case 3:
+							{
+								//пришло с ивентов пока хз что и как тут мутить... Хотя знаю, но блэт агрегация собственно-придуманная, ухххх
+								break;
+							}
+							default:
+							{
+								//Ошибочка, надо как-то обработать пока хз как.
+								break;
+							}
+						}
+					}
+					else                        //Если просто перевалочный пункт
+					{
+						int a =	_this->ShowSheet(_this->Global.now,_this->Global.Process.at(_this->Global.Process.size()).at(0));
+						WaitForSingleObject(_this->Threads.hMeshOut.at(a), INFINITE);
+						std::vector<int> pufpuf;
+						pufpuf = _this->Global.Process.at(_this->Global.Process.size());
+						pufpuf.at(0)=a;
+						_this->Threads.MeshOut.at(a).insert(_this->Threads.MeshOut.at(a).begin(), pufpuf);
+						ReleaseMutex(_this->Threads.hMeshOut.at(a));
+					}
+				}
 				else			//если назначался не нам, то пропускаем мимо ушей. В нашем случае срем им в структуру Pass
 				{
-					WaitForSingleObject(Global.hPass, INFINITE);
-					Global.Pass.push_back(Global.Process.at(Global.Process.size() - 1));
-					ReleaseMutex(Global.hPass);
-					Global.Process.pop_back();
+					WaitForSingleObject(_this->Global.hPass, INFINITE);
+					_this->Global.Pass.push_back(_this->Global.Process.at(_this->Global.Process.size() - 1));
+					ReleaseMutex(_this->Global.hPass);
+					_this->Global.Process.pop_back();
 				}
 			}
-			else
-				Sleep(1);
-			ReleaseMutex(Global.hProcess);
-			Sleep(Global.dream);
+			ReleaseMutex(_this->Global.hProcess);
 		}
 		return 0;
 	}
 //		Поток для подсистемы
-	DWORD NodeKernel::UsuThread(LPVOID t)
+	DWORD WINAPI NodeKernel::UsuThread(LPVOID t)
 	{
 		return 0;
 	}
 //		Поток для меш систем
-	DWORD NodeKernel::MeshThread(LPVOID t)
+	DWORD WINAPI NodeKernel::MeshThread(LPVOID t)
 	{
+		NodeKernel* _this = (NodeKernel*)t;
+		if (!_this) return;
 		//При инициализации потока, мы определяем какие структуры он будет использовать
 		HANDLE  second[2];
-		int Index = Threads.Threads.size() + 1;								//Называем индекс потока, то бишь его порядковый номер на ус-ве
-		second[0] = Threads.hMeshIn.at(Index);
+		int Index = _this->Threads.Threads.size() + 1;								//Называем индекс потока, то бишь его порядковый номер на ус-ве
+		second[0] = _this->Threads.hMeshIn.at(Index);
 		std::vector<int> VectorBuf;
 		for (;;)
 		{
-			WaitForSingleObject(Threads.hMeshIn.at(Index), INFINITE);		//Резервируем Mesh1
-			if (Threads.MeshIn.at(Index).size - 1 > 0)						//Есть ли пакеты пришедшие из вне?
+			WaitForSingleObject(_this->Threads.hMeshIn.at(Index), INFINITE);
+			if (_this->Threads.MeshIn.at(Index).size() > 0 && _this->Threads.PushMeshPac.at(Index) > 0)
 			{
-				if (System::Convert::ToInt16(Threads.MeshIn.at(Index).at(Threads.MeshIn.at(Index).size - 1).at(0)) == 228)
-				{
-					/*System::MessageBox::Show(
-						Convert::ToString("Все пакеты по шине 2 отправленны. Итого: " + Convert::ToString(send2)),
-						Convert::ToString("Все гуд"),
-						MessageBoxButtons::OK,
-						MessageBoxIcon::Information);*/
-					Sleep(1);
-				}
-				else												//Если норм пакеты, то шо делать остается. Записываем в структуру для GenHandler
-				{
-					WaitForSingleObject(Global.hProcess, INFINITE);
-					Global.Process.push_back(Threads.MeshIn.at(Index).at(Threads.MeshIn.at(Index).size() - 1));
-					ReleaseMutex(Global.hProcess);
-					Threads.MeshIn.at(Index).pop_back();
-				}
+				WaitForSingleObject(_this->Global.hProcess, INFINITE);
+				_this->Global.Process.push_back(_this->Threads.MeshIn.at(Index).at(_this->Threads.MeshIn.at(Index).size));
+				ReleaseMutex(_this->Global.hProcess);
+				_this->Threads.MeshIn.at(Index).pop_back();
 			}
-			ReleaseMutex(Threads.hMeshIn.at(Index));
-			Sleep(Global.dream);
-			WaitForMultipleObjects(2, second, TRUE, INFINITE);	//резервируем Mesh1 и MeshProc1
-			if (Threads.MeshOut.at(Index).size()>0)								//Есть ли пакеты в очереди на отправку
-			{
-				VectorBuf = Threads.MeshOut.at(Index)[Threads.MeshOut.at(Index).size() - 1];
-				VectorBuf.insert(VectorBuf.begin(), 228);
-				Threads.MeshIn.at(Index).insert(Mesh1.begin(), VectorBuf);
-				MeshProcess1.pop_back();
-			}
-			ReleaseMutex(second);
-			Sleep(IWANTSLEEP);
+			//WaitForSingleObject(_this->Threads.hMeshIn.at(Index), INFINITE);		//Резервируем Mesh
+			//if (_this->Threads.MeshIn.at(Index).size > 0 && _this->Threads.PushMeshPac.at(Index) > 0)						//Есть ли пакеты пришедшие из вне?
+			//{
+			//	if (System::Convert::ToInt16(_this->Threads.MeshIn.at(Index).at(_this->Threads.MeshIn.at(Index).size - 1).at(0)) == 228)
+			//	{
+			//		/*System::MessageBox::Show(
+			//			Convert::ToString("Все пакеты по шине 2 отправленны. Итого: " + Convert::ToString(send2)),
+			//			Convert::ToString("Все гуд"),
+			//			MessageBoxButtons::OK,
+			//			MessageBoxIcon::Information);*/
+			//		Sleep(1);
+			//	}
+			//	else												//Если норм пакеты, то шо делать остается. Записываем в структуру для GenHandler
+			//	{
+			//		WaitForSingleObject(_this->Global.hProcess, INFINITE);
+			//		_this->Global.Process.push_back(_this->Threads.MeshIn.at(Index).at(_this->Threads.MeshIn.at(Index).size() - 1));
+			//		ReleaseMutex(_this->Global.hProcess);
+			//		_this->Threads.MeshIn.at(Index).pop_back();
+			//	}
+			//}
+			//ReleaseMutex(_this->Threads.hMeshIn.at(Index));
+			//Sleep(_this->Global.dream);
+			//WaitForMultipleObjects(2, second, TRUE, INFINITE);	//резервируем Mesh1 и MeshProc1
+			//if (_this->Threads.MeshOut.at(Index).size()>0)								//Есть ли пакеты в очереди на отправку
+			//{
+			//	VectorBuf = _this->Threads.MeshOut.at(Index)[_this->Threads.MeshOut.at(Index).size() - 1];
+			//	VectorBuf.insert(VectorBuf.begin(), 228);
+			//	_this->Threads.MeshIn.at(Index).insert(_this->Threads.MeshIn.at().begin(), VectorBuf);
+			//	_this->Threads.MeshProcess1.pop_back();
+			//}
+			//ReleaseMutex(second);
+			//Sleep(_this->Global.dream);
 		}
 		return 0;
 	}
